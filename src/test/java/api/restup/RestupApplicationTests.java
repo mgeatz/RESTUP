@@ -1,8 +1,7 @@
-package api.safecomm;
+package api.restup;
 
-import api.safecomm.email.EmailService;
-import api.safecomm.util.GenerateBlockHash;
-import api.safecomm.util.MongoConnect;
+import api.restup.util.GenerateBlockHash;
+import api.restup.util.MongoConnect;
 import com.mongodb.Block;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
@@ -16,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class SafecommApplicationTests {
+public class RestupApplicationTests {
 
 	@Test
 	public void contextLoads() {
@@ -24,20 +23,7 @@ public class SafecommApplicationTests {
 
 
     /**
-     * SEND EMAIL
-     */
-
-    @Autowired
-    private EmailService emailService;
-
-    @Test
-    public void testEmail(){
-        emailService.sendMail("mgeatz@yahoo.com","Test suite test subject","Test suite test mail text");
-    }
-
-
-    /**
-     * VALIDATE BLOCKCHAIN
+     * VALIDATE MarketFeasibility
      */
 
     private Boolean blockIsValid = true;
@@ -52,7 +38,7 @@ public class SafecommApplicationTests {
 
 	@Test
 	public void blockIsValid() {
-		MongoConnect mongoConnect = new MongoConnect("chain", "blocks");
+		MongoConnect mongoConnect = new MongoConnect("MarketFeasibilityService", "UP");
 		MongoCollection collection = mongoConnect.getCollection();
 
 		Block<Document> recalculateBlockData = document -> {

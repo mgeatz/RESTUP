@@ -1,7 +1,6 @@
-package api.safecomm.blockchain.service;
+package api.restup.marketFeasibility.service;
 
 /**
- * Created by geatz on 7/8/17.
  *
  * Description: representation class which Jackson uses to
  * marshal instances of type EmailResult into JSON
@@ -11,12 +10,12 @@ package api.safecomm.blockchain.service;
  * {"result":"success","id":1}
  *
  */
-public class BlockChainResult {
+public class MarketFeasibilityResult {
 
     private String result;
     private String blockHash;
 
-    public BlockChainResult(String blockHash, String result) {
+    public MarketFeasibilityResult(String blockHash, String result) {
         this.result = result;
         this.blockHash = blockHash;
     }

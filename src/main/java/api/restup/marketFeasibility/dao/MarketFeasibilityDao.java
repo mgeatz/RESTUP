@@ -1,13 +1,13 @@
-package api.safecomm.blockchain.dao;
+package api.restup.marketFeasibility.dao;
 
-import api.safecomm.util.MongoConnect;
+import api.restup.util.MongoConnect;
 import com.mongodb.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Sorts;
 import org.bson.Document;
 
-public class BlockChainDao {
+public class MarketFeasibilityDao {
 
     private MongoCollection duplicateCollection;
     private MongoCollection databaseCollection;
@@ -23,14 +23,14 @@ public class BlockChainDao {
         setPreviousHash(document.getString("blockHash"));
     };
 
-    public BlockChainDao(){}
+    public MarketFeasibilityDao(){}
 
-    public BlockChainDao(String db, String collection) {
+    public MarketFeasibilityDao(String db, String collection) {
         MongoConnect mongoConnect = new MongoConnect(db, collection);
         this.databaseCollection = mongoConnect.getCollection();
 
         MongoClient mongoClient = new MongoClient();
-        MongoDatabase database = mongoClient.getDatabase("chain");
+        MongoDatabase database = mongoClient.getDatabase("MarketFeasibility");
         this.database = database;
 
         databaseCollection.find().sort(Sorts.ascending("blockIndex")).forEach(setPreviousIdentifiers);
@@ -77,7 +77,7 @@ public class BlockChainDao {
                 oldCollection.drop();
             }
             catch (Exception ex) {
-                MongoCollection oldCollection = db.getCollection("blocks");
+                MongoCollection oldCollection = db.getCollection("MarketFeasibility");
                 oldCollection.drop();
             }
         }

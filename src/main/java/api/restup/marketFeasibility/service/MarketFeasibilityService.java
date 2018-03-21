@@ -1,7 +1,7 @@
-package api.safecomm.blockchain.service;
+package api.restup.marketFeasibility.service;
 
-import api.safecomm.blockchain.dao.BlockChainDao;
-import api.safecomm.util.GenerateBlockHash;
+import api.restup.marketFeasibility.dao.MarketFeasibilityDao;
+import api.restup.util.GenerateBlockHash;
 import com.mongodb.Block;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoCollection;
@@ -13,9 +13,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Service
-public class BlockChainService {
+public class MarketFeasibilityService {
 
-    BlockChainDao blockChainDao = new BlockChainDao("chain", "blocks");
+    MarketFeasibilityDao marketFeasibilityDao = new MarketFeasibilityDao("UP", "MarketFeasibility");
     private Boolean blockIsValid = true;
 
     private Integer blockIndex;
@@ -28,11 +28,11 @@ public class BlockChainService {
     private MongoCollection duplicateCollection;
     private MongoNamespace blocksNamespace;
 
-    public BlockChainService() {}
+    public MarketFeasibilityService() {}
 
-    public BlockChainService (String data) throws NoSuchAlgorithmException {
+    public MarketFeasibilityService(String data) throws NoSuchAlgorithmException {
 
-        Integer previousIndex = blockChainDao.getPreviousIndex(); // fetch the last block's index
+        Integer previousIndex = marketFeasibilityDao.getPreviousIndex(); // fetch the last block's index
         this.previousIndex = previousIndex; // add 1 to previous hash to create new
         this.blockIndex = previousIndex + 1;
 
@@ -41,7 +41,7 @@ public class BlockChainService {
         this.blockTimestamp = formatter.format(date);
 
         this.blockData = data;
-        this.previousHash = blockChainDao.getPreviousHash(); // fetch the last block's previousHash
+        this.previousHash = marketFeasibilityDao.getPreviousHash(); // fetch the last block's previousHash
 
         GenerateBlockHash calculatedBlockHash = new GenerateBlockHash(blockIndex, blockTimestamp, blockData, previousHash);
         this.blockHash = calculatedBlockHash.getBlockHash();
@@ -73,7 +73,7 @@ public class BlockChainService {
         }
 
         // if re-calculated blockHash equals existing blockHash
-        if (blockHashRebuilt.equals(blockHash) && getBlockIsValid()) {
+        if (blockHashRebuilt.equals(blockHash)) {
             setBlockIsValid(true);
         } else {
             setBlockIsValid(false);
@@ -85,7 +85,7 @@ public class BlockChainService {
                               Integer previousIndex,
                               String blockHash) {
 
-        MongoCollection collection = blockChainDao.getDatabaseCollection();
+        MongoCollection collection = marketFeasibilityDao.getDatabaseCollection();
         this.blocksNamespace = collection.getNamespace();
 
         if (previousHash != null && previousIndex != null) {
@@ -118,16 +118,16 @@ public class BlockChainService {
         String timestamp = getBlockTimestamp();
         String blockHash = getBlockHash();
 
-        blockChainDao.createDuplicateBlock(blockHash);
-        this.duplicateCollection = blockChainDao.getDuplicateCollection();
+        marketFeasibilityDao.createDuplicateBlock(blockHash);
+        this.duplicateCollection = marketFeasibilityDao.getDuplicateCollection();
 
         Boolean validateBlock = validateBlock(blockIndex, previousHash, previousIndex, blockHash);
 
         // validate data points
         if (validateBlock) {
             // send data points to DB (DAO)
-            blockChainDao.addBlock(blockIndex, blockData, previousHash, timestamp, blockHash);
-            blockChainDao.dropPreviousHashCollection(previousHash);
+            marketFeasibilityDao.addBlock(blockIndex, blockData, previousHash, timestamp, blockHash);
+            marketFeasibilityDao.dropPreviousHashCollection(previousHash);
 
             return true;
         } else {

@@ -1,4 +1,4 @@
-package api.safecomm.util;
+package api.restup.util;
 
 import org.bouncycastle.util.encoders.Hex;
 

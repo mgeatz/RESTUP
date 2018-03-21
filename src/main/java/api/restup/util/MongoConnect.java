@@ -1,4 +1,4 @@
-package api.safecomm.util;
+package api.restup.util;
 
 
 import com.mongodb.MongoClient;
