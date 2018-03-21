@@ -15,168 +15,170 @@ import java.util.Date;
 @Service
 public class MarketFeasibilityService {
 
-    MarketFeasibilityDao marketFeasibilityDao = new MarketFeasibilityDao("UP", "MarketFeasibility");
-    private Boolean blockIsValid = true;
+	MarketFeasibilityDao marketFeasibilityDao = new MarketFeasibilityDao("UP", "MarketFeasibility");
+	private Boolean blockIsValid = true;
 
-    private Integer blockIndex;
-    private String blockData;
-    private String previousHash;
-    private Integer previousIndex;
-    private String blockTimestamp;
-    private String blockHash;
+	private Integer blockIndex;
+	private String  blockData;
+	private String  previousHash;
+	private Integer previousIndex;
+	private String  blockTimestamp;
+	private String  blockHash;
 
-    private MongoCollection duplicateCollection;
-    private MongoNamespace blocksNamespace;
+	private MongoCollection duplicateCollection;
+	private MongoNamespace  blocksNamespace;
 
-    public MarketFeasibilityService() {}
+	public MarketFeasibilityService() {
+	}
 
-    public MarketFeasibilityService(String data) throws NoSuchAlgorithmException {
+	public MarketFeasibilityService(String data) throws NoSuchAlgorithmException {
 
-        Integer previousIndex = marketFeasibilityDao.getPreviousIndex(); // fetch the last block's index
-        this.previousIndex = previousIndex; // add 1 to previous hash to create new
-        this.blockIndex = previousIndex + 1;
+		Integer previousIndex = marketFeasibilityDao.getPreviousIndex(); // fetch the last block's index
+		this.previousIndex = previousIndex; // add 1 to previous hash to create new
+		this.blockIndex = previousIndex + 1;
 
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
-        Date date = new Date();
-        this.blockTimestamp = formatter.format(date);
+		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
+		Date date = new Date();
+		this.blockTimestamp = formatter.format(date);
 
-        this.blockData = data;
-        this.previousHash = marketFeasibilityDao.getPreviousHash(); // fetch the last block's previousHash
+		this.blockData = data;
+		this.previousHash = marketFeasibilityDao.getPreviousHash(); // fetch the last block's previousHash
 
-        GenerateBlockHash calculatedBlockHash = new GenerateBlockHash(blockIndex, blockTimestamp, blockData, previousHash);
-        this.blockHash = calculatedBlockHash.getBlockHash();
-    }
+		GenerateBlockHash calculatedBlockHash = new GenerateBlockHash(blockIndex, blockTimestamp, blockData, previousHash);
+		this.blockHash = calculatedBlockHash.getBlockHash();
+	}
 
 
-    /**
-     * To ensure the integrity of the block chain, prior to adding a new block we will recursively check all existing
-     * blocks, re-calcuting their hash based on required encryptedHash() parameters, & comparing against hash stored
-     * on the block record within the DB.
-     */
-    Block<Document> recalculateBlockData = document -> {
-        Integer blockIndex = document.getInteger("blockIndex");
-        String blockTimestamp = document.getString("blockTimestamp");
-        String blockData = document.getString("blockData");
-        String previousHash = document.getString("previousHash");
-        String blockHash = document.getString("blockHash");
-        String blockHashRebuilt;
+	/**
+	 * To ensure the integrity of the block chain, prior to adding a new block we will recursively check all existing
+	 * blocks, re-calcuting their hash based on required encryptedHash() parameters, & comparing against hash stored
+	 * on the block record within the DB.
+	 */
+	Block<Document> recalculateBlockData = document -> {
+		Integer blockIndex = document.getInteger("blockIndex");
+		String blockTimestamp = document.getString("blockTimestamp");
+		String blockData = document.getString("blockData");
+		String previousHash = document.getString("previousHash");
+		String blockHash = document.getString("blockHash");
+		String blockHashRebuilt;
 
-        try {
-            MongoCollection duplicateCollection = getDuplicateCollection();
-            duplicateCollection.insertOne(document);
+		try {
+			MongoCollection duplicateCollection = getDuplicateCollection();
+			duplicateCollection.insertOne(document);
 
-            GenerateBlockHash calculatedBlockHash = new GenerateBlockHash(blockIndex, blockTimestamp, blockData, previousHash);
-            blockHashRebuilt = calculatedBlockHash.getBlockHash();
-        } catch (NoSuchAlgorithmException e) {
-            blockHashRebuilt = "ERROR";
-            e.printStackTrace();
-        }
+			GenerateBlockHash calculatedBlockHash = new GenerateBlockHash(blockIndex, blockTimestamp, blockData, previousHash);
+			blockHashRebuilt = calculatedBlockHash.getBlockHash();
+		}
+		catch (NoSuchAlgorithmException e) {
+			blockHashRebuilt = "ERROR";
+			e.printStackTrace();
+		}
 
-        // if re-calculated blockHash equals existing blockHash
-        if (blockHashRebuilt.equals(blockHash)) {
-            setBlockIsValid(true);
-        } else {
-            setBlockIsValid(false);
-        }
-    };
+		// if re-calculated blockHash equals existing blockHash
+		if (blockHashRebuilt.equals(blockHash)) {
+			setBlockIsValid(true);
+		} else {
+			setBlockIsValid(false);
+		}
+	};
 
-    public Boolean validateBlock(Integer blockIndex,
-                              String previousHash,
-                              Integer previousIndex,
-                              String blockHash) {
+	public Boolean validateBlock(Integer blockIndex,
+								 String previousHash,
+								 Integer previousIndex,
+								 String blockHash) {
 
-        MongoCollection collection = marketFeasibilityDao.getDatabaseCollection();
-        this.blocksNamespace = collection.getNamespace();
+		MongoCollection collection = marketFeasibilityDao.getDatabaseCollection();
+		this.blocksNamespace = collection.getNamespace();
 
-        if (previousHash != null && previousIndex != null) {
-            if (previousIndex.equals(blockIndex)) {
-                // basic check: test against the previous block index
-                return false;
-            } else if (previousHash.equals(blockHash)) {
-                // basic check: test against the previous block hash
-                return false;
-            } else {
-                // advanced check: re-calculate all of the block hashes based on previous block data to ensure integrity
-                collection.find().forEach(recalculateBlockData);
-                return getBlockIsValid();
-            }
-        } else {
-            System.out.println("Oh no, something is null");
-            return false;
-        }
-    }
+		if (previousHash != null && previousIndex != null) {
+			if (previousIndex.equals(blockIndex)) {
+				// basic check: test against the previous block index
+				return false;
+			} else if (previousHash.equals(blockHash)) {
+				// basic check: test against the previous block hash
+				return false;
+			} else {
+				// advanced check: re-calculate all of the block hashes based on previous block data to ensure integrity
+				collection.find().forEach(recalculateBlockData);
+				return getBlockIsValid();
+			}
+		} else {
+			System.out.println("Oh no, something is null");
+			return false;
+		}
+	}
 
-    // print collection items
-    //Block<Document> printBlock = document -> System.out.println(document.toJson());
+	// print collection items
+	//Block<Document> printBlock = document -> System.out.println(document.toJson());
 
-    public Boolean createBlock() {
-        // get data points
-        Integer blockIndex = getBlockIndex();
-        String blockData = getBlockData();
-        String previousHash = getPreviousHash();
-        Integer previousIndex = getPreviousIndex();
-        String timestamp = getBlockTimestamp();
-        String blockHash = getBlockHash();
+	public Boolean createBlock() {
+		// get data points
+		Integer blockIndex = getBlockIndex();
+		String blockData = getBlockData();
+		String previousHash = getPreviousHash();
+		Integer previousIndex = getPreviousIndex();
+		String timestamp = getBlockTimestamp();
+		String blockHash = getBlockHash();
 
-        marketFeasibilityDao.createDuplicateBlock(blockHash);
-        this.duplicateCollection = marketFeasibilityDao.getDuplicateCollection();
+		marketFeasibilityDao.createDuplicateBlock(blockHash);
+		this.duplicateCollection = marketFeasibilityDao.getDuplicateCollection();
 
-        Boolean validateBlock = validateBlock(blockIndex, previousHash, previousIndex, blockHash);
+		Boolean validateBlock = validateBlock(blockIndex, previousHash, previousIndex, blockHash);
 
-        // validate data points
-        if (validateBlock) {
-            // send data points to DB (DAO)
-            marketFeasibilityDao.addBlock(blockIndex, blockData, previousHash, timestamp, blockHash);
-            marketFeasibilityDao.dropPreviousHashCollection(previousHash);
+		// validate data points
+		if (validateBlock) {
+			// send data points to DB (DAO)
+			marketFeasibilityDao.addBlock(blockIndex, blockData, previousHash, timestamp, blockHash);
+			marketFeasibilityDao.dropPreviousHashCollection(previousHash);
 
-            return true;
-        } else {
-            System.out.println("ERROR creating Block. Tampered block detected.");
-            return false;
-        }
-    }
+			return true;
+		} else {
+			System.out.println("ERROR creating Block. Tampered block detected.");
+			return false;
+		}
+	}
 
-    public String getBlockData() {
-        return blockData;
-    }
+	public String getBlockData() {
+		return blockData;
+	}
 
-    public String getPreviousHash() {
-        return previousHash;
-    }
+	public String getPreviousHash() {
+		return previousHash;
+	}
 
-    public Integer getPreviousIndex() {
-        return previousIndex;
-    }
+	public Integer getPreviousIndex() {
+		return previousIndex;
+	}
 
-    public Integer getBlockIndex() {
-        return blockIndex;
-    }
+	public Integer getBlockIndex() {
+		return blockIndex;
+	}
 
-    public String getBlockTimestamp() {
-        return blockTimestamp;
-    }
+	public String getBlockTimestamp() {
+		return blockTimestamp;
+	}
 
-    public String getBlockHash() {
-        return blockHash;
-    }
+	public String getBlockHash() {
+		return blockHash;
+	}
 
-    public Boolean getBlockIsValid() {
-        return blockIsValid;
-    }
+	public Boolean getBlockIsValid() {
+		return blockIsValid;
+	}
 
-    public void setBlockIsValid(Boolean blockIsValid) {
-        this.blockIsValid = blockIsValid;
-    }
+	public void setBlockIsValid(Boolean blockIsValid) {
+		this.blockIsValid = blockIsValid;
+	}
 
-    public MongoCollection getDuplicateCollection() {
-        return duplicateCollection;
-    }
+	public MongoCollection getDuplicateCollection() {
+		return duplicateCollection;
+	}
 
-    public MongoNamespace getBlocksNamespace() {
-        return blocksNamespace;
-    }
+	public MongoNamespace getBlocksNamespace() {
+		return blocksNamespace;
+	}
 
-    public void setBlocksNamespace(MongoNamespace blocksNamespace) {
-        this.blocksNamespace = blocksNamespace;
-    }
+	public void setBlocksNamespace(MongoNamespace blocksNamespace) {
+		this.blocksNamespace = blocksNamespace;
+	}
 }
