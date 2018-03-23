@@ -1,5 +1,6 @@
 package api.restup.web;
 
+import api.restup.general.UpTest;
 import api.restup.marketFeasibility.service.MarketFeasibilityImpl;
 import api.restup.marketFeasibility.service.MarketFeasibilityResult;
 import api.restup.marketFeasibility.service.MarketFeasibilityService;
@@ -10,6 +11,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class PrimaryController {
+
+
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    public UpTest upTest(@RequestParam(value="name", defaultValue="The server is running.") String name) {
+        return new UpTest(name);
+    }
+
 
     @Autowired
     MarketFeasibilityService marketFeasibilityService;
