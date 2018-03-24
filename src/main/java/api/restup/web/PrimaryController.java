@@ -1,12 +1,17 @@
 package api.restup.web;
 
 import api.restup.general.UpTest;
+import api.restup.general.service.CustomerIP;
 import api.restup.marketFeasibility.service.MarketFeasibilityImpl;
 import api.restup.marketFeasibility.service.MarketFeasibilityResult;
 import api.restup.marketFeasibility.service.MarketFeasibilityService;
+
 import java.security.NoSuchAlgorithmException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
 
 
 @RestController
@@ -17,6 +22,20 @@ public class PrimaryController {
     public UpTest upTest(@RequestParam(value="name", defaultValue="The server is running.") String name) {
         return new UpTest(name);
     }
+
+
+
+    @Autowired
+    private HttpServletRequest request;
+
+    @RequestMapping(value = "/customerIP", method = RequestMethod.GET)
+    public CustomerIP customerIP() {
+
+        String clientIp = request.getRemoteAddr();
+
+        return new CustomerIP(clientIp);
+    }
+
 
 
     @Autowired
