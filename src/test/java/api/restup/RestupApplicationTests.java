@@ -1,5 +1,6 @@
 package api.restup;
 
+import api.restup.general.service.EmailSignUp;
 import api.restup.util.GenerateBlockHash;
 import api.restup.util.MongoConnect;
 import com.mongodb.Block;
@@ -20,6 +21,13 @@ public class RestupApplicationTests {
 	@Test
 	public void contextLoads() {
 	}
+
+
+	@Test
+	public void addEmailTest() {
+		EmailSignUp emailSignUp = new EmailSignUp("mgeatz01@gmail.com", "1.2.3.4");
+	}
+
 
 
     /**

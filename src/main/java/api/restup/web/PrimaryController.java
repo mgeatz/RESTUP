@@ -2,6 +2,7 @@ package api.restup.web;
 
 import api.restup.general.UpTest;
 import api.restup.general.service.CustomerIP;
+import api.restup.general.service.EmailSignUp;
 import api.restup.marketFeasibility.service.MarketFeasibilityImpl;
 import api.restup.marketFeasibility.service.MarketFeasibilityResult;
 import api.restup.marketFeasibility.service.MarketFeasibilityService;
@@ -18,6 +19,11 @@ import javax.servlet.http.HttpServletRequest;
 public class PrimaryController {
 
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     @RequestMapping(value = "/test", method = RequestMethod.GET)
     public UpTest upTest(@RequestParam(value="name", defaultValue="The server is running.") String name) {
         return new UpTest(name);
@@ -28,12 +34,29 @@ public class PrimaryController {
     @Autowired
     private HttpServletRequest request;
 
+    /**
+     *
+     * @return
+     */
     @RequestMapping(value = "/customerIP", method = RequestMethod.GET)
     public CustomerIP customerIP() {
 
         String clientIp = request.getRemoteAddr();
 
         return new CustomerIP(clientIp);
+    }
+
+
+    /**
+     *
+     * @param qEmailAddress
+     * @param qClientIP
+     * @return
+     */
+    @RequestMapping(value = "/emailSignUp", method = RequestMethod.GET)
+    public EmailSignUp emailSignUp(@RequestParam(value="email", defaultValue="emptyEmailAddress") String qEmailAddress,
+                                   @RequestParam(value="client", defaultValue="0.0.0.0") String qClientIP) {
+        return new EmailSignUp(qEmailAddress, qClientIP);
     }
 
 
